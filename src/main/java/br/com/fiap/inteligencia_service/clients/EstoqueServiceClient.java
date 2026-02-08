@@ -1,24 +1,28 @@
 package br.com.fiap.inteligencia_service.clients;
 
-import br.com.fiap.inteligencia_service.entities.dto.EstoqueRecord;
-import br.com.fiap.inteligencia_service.entities.dto.PaginacaoEstoqueRecord;
+import br.com.fiap.inteligencia_service.dto.PaginacaoEstoqueDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
 import java.util.UUID;
 
 @FeignClient(
     name = "estoque-service",
-    url="${services.estoque}"
+    url="${services.estoque:}"
 )
 public interface EstoqueServiceClient {
 
-    @GetMapping("/estoque/{idUnidade}/insumos")
-    PaginacaoEstoqueRecord buscarPorUnidade(
+    @GetMapping("/estoque/{idUnidade}")
+    PaginacaoEstoqueDto buscarPorUnidade(
         @PathVariable UUID idUnidade,
+        @RequestParam int pagina
+    );
+
+    @GetMapping("/estoque/insumos/{idInsumo}")
+    PaginacaoEstoqueDto buscarPorInsumo(
+        @PathVariable UUID idInsumo,
         @RequestParam int pagina
     );
 }
