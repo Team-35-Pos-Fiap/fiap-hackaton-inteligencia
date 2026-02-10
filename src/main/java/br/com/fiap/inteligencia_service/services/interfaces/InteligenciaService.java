@@ -6,5 +6,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface InteligenciaService {
-    List<InteligenciaResponseDto> analisar(UUID idUnidade);
+    InteligenciaResponseDto analisar(UUID idUnidade);
 }

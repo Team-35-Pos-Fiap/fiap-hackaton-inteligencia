@@ -38,7 +38,7 @@ public class InteligenciaServiceImpl implements InteligenciaService {
     private final Map<UUID, String> nomeCache = new ConcurrentHashMap<>();
 
     @Override
-    public List<InteligenciaResponseDto> analisar(UUID idUnidade) {
+    public InteligenciaResponseDto analisar(UUID idUnidade) {
         LocalDate hoje = LocalDate.now();
 
         Map<UUID, InsumoDto> cacheInsumos = new ConcurrentHashMap<>();
@@ -65,7 +65,7 @@ public class InteligenciaServiceImpl implements InteligenciaService {
             .toList();
 
         // 4. Resolve Sugestões
-        return itemsEmRisco.parallelStream().map(alvo -> {
+        List<InteligenciaInsumoDto> insumosEmRisco = itemsEmRisco.parallelStream().map(alvo -> {
             var potenciais = estoqueIntegration.buscarTodoEstoquePorInsumo(alvo.insumoId()).stream()
                 .filter(item -> !item.idUnidade().equals(alvo.unidadeId()))
                 .toList();
@@ -89,11 +89,16 @@ public class InteligenciaServiceImpl implements InteligenciaService {
                 .filter(Objects::nonNull)
                 .toList();
 
-            return buildFinalReport(alvo, sugestoes, cacheUnidades, cacheInsumos);
+            return buildFinalReport(alvo, sugestoes, cacheInsumos);
         }).toList();
+
+        var dadosUnidade = cacheUnidades.computeIfAbsent(idUnidade,
+            estabelecimentoSaudeIntegration::buscarEstabelecimentoPorId);
+
+        return new InteligenciaResponseDto(dadosUnidade, insumosEmRisco);
     }
 
-    private InteligenciaResponseDto buildFinalReport(RiscoSnapshotDto alvo, List<SugestaoTransferenciaDto> sugestoes, Map<UUID, EstabelecimentoSaudeDto> cacheUnidades, Map<UUID, InsumoDto> cacheInsumos) {
+    private InteligenciaInsumoDto buildFinalReport(RiscoSnapshotDto alvo, List<SugestaoTransferenciaDto> sugestoes, Map<UUID, InsumoDto> cacheInsumos) {
         double diasNecessarios = Math.max(0, DIAS_ALERTA - alvo.diasAteEsgotar());
         double quantidadeNecessaria = diasNecessarios * alvo.consumoDiario();
 
@@ -111,14 +116,11 @@ public class InteligenciaServiceImpl implements InteligenciaService {
             compra = new SugestaoCompraDto(quantidadeNecessaria - capacidadeDoacao);
         }
 
-        var dadosUnidade = cacheUnidades.computeIfAbsent(alvo.unidadeId(),
-            estabelecimentoSaudeIntegration::buscarEstabelecimentoPorId);
-
         var dadosInsumo = cacheInsumos.computeIfAbsent(alvo.insumoId(),
             insumoIntegration::buscarInsumoPorId);
 
-        return new InteligenciaResponseDto(
-            dadosUnidade, dadosInsumo, alvo.risco(), alvo.diasAteEsgotar(),
+        return new InteligenciaInsumoDto(
+            dadosInsumo, alvo.risco(), alvo.diasAteEsgotar(),
             quantidadeNecessaria, alvo.tendenciaConsumo(), top5doadores, compra
         );
     }

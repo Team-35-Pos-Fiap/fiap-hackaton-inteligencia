@@ -22,7 +22,7 @@ public class InteligenciaController {
     }
 
     @GetMapping("/unidade/{idUnidade}")
-    public ResponseEntity<List<InteligenciaResponseDto>> analisar(@PathVariable UUID idUnidade) {
+    public ResponseEntity<InteligenciaResponseDto> analisar(@PathVariable UUID idUnidade) {
 
         return ResponseEntity.ok(this.inteligenciaService.analisar(idUnidade));
     }
