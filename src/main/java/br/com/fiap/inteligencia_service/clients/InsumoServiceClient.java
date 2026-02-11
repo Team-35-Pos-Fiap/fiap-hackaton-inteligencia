@@ -1,5 +1,6 @@
 package br.com.fiap.inteligencia_service.clients;
 
+import br.com.fiap.inteligencia_service.config.FeignConfig;
 import br.com.fiap.inteligencia_service.dto.InsumoDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +10,7 @@ import java.util.UUID;
 
 @FeignClient(
     name = "insumos",
-    url="${services.insumos:}"
+    configuration = FeignConfig.class
 )
 public interface InsumoServiceClient {
 
